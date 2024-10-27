@@ -1,147 +1,239 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Загрузить последние сохраненные данные
-    chrome.storage.local.get(['lastFootLength', 'lastSizeSystem', 'lastUnit'], function(result) {
+    chrome.storage.local.get(['lastFootLength', 'lastUnit', 'showImage', 'theme'], function(result) {
         if (result.lastFootLength) {
             document.getElementById('footLength').value = result.lastFootLength;
-        }
-        if (result.lastSizeSystem) {
-            document.getElementById('sizeSystem').value = result.lastSizeSystem;
+            updateSizes();
         }
         if (result.lastUnit) {
             document.getElementById('unit').value = result.lastUnit;
         }
+        if (result.showImage) {
+            const image = document.querySelector('.header-image');
+            image.classList.remove('hidden');
+        }
+        if (result.theme === 'dark') {
+            toggleTheme(false);
+        }
+    });
+
+    // Добавляем обработчики событий
+    document.getElementById('footLength').addEventListener('input', updateSizes);
+    document.getElementById('unit').addEventListener('change', updateSizes);
+    document.getElementById('toggleImage').addEventListener('click', function() {
+        toggleImage(true);
+    });
+    document.getElementById('toggleTheme').addEventListener('click', function() {
+        toggleTheme(true);
     });
 });
 
-document.getElementById('findSize').addEventListener('click', function() {
+function updateSizes() {
     let footLength = parseFloat(document.getElementById('footLength').value);
-    const sizeSystem = document.getElementById('sizeSystem').value;
     const unit = document.getElementById('unit').value;
-    let result = '';
 
     if (isNaN(footLength) || footLength <= 0) {
-        result = 'Please enter a valid foot length.';
-    } else {
-        if (unit === 'in') {
-            footLength = footLength * 2.54;
-        }
-        result = getShoeSize(footLength, sizeSystem);
-
-        // Сохранить данные
-        chrome.storage.local.set({
-            lastFootLength: document.getElementById('footLength').value,
-            lastSizeSystem: sizeSystem,
-            lastUnit: unit
-        });
+        document.getElementById('result').textContent = 'Please enter a valid foot length.';
+        return;
     }
 
-    document.getElementById('result').textContent = result;
-
-    // Автоматическое копирование в буфер обмена
-    if (result) {
-        navigator.clipboard.writeText(result).then(() => {
-            showNotification('Result copied to clipboard!');
-        }).catch(err => {
-            showNotification('Failed to copy result.');
-        });
+    if (unit === 'in') {
+        footLength = footLength * 2.54;
     }
-});
 
-document.getElementById('showInstructions').addEventListener('click', function() {
-    document.getElementById('instructions').style.display = 'block';
-});
+    // Сохранить данные
+    chrome.storage.local.set({
+        lastFootLength: document.getElementById('footLength').value,
+        lastUnit: unit
+    });
 
-document.getElementById('closeInstructions').addEventListener('click', function() {
-    document.getElementById('instructions').style.display = 'none';
-});
+    const sizes = getAllSizes(footLength);
+    displaySizes(sizes);
+}
+
+function getAllSizes(length) {
+    const sizeSystems = ['EU', 'US Men', 'US Women', 'UK', 'JP', 'AU', 'CN', 'KR', 'RU', 'BR', 'MX'];
+    const sizes = {};
+
+    for (let system of sizeSystems) {
+        const size = getShoeSize(length, system);
+        sizes[system] = size;
+    }
+
+    return sizes;
+}
+
+function displaySizes(sizes) {
+    let resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = '';
+
+    const table = document.createElement('table');
+    table.classList.add('size-table');
+    const tbody = document.createElement('tbody');
+
+    // Добавляем заголовок таблицы
+    const headerRow = document.createElement('tr');
+    const headerSystem = document.createElement('th');
+    headerSystem.textContent = 'System';
+    const headerSize = document.createElement('th');
+    headerSize.textContent = 'Size';
+    headerRow.appendChild(headerSystem);
+    headerRow.appendChild(headerSize);
+    tbody.appendChild(headerRow);
+
+    for (let system in sizes) {
+        const row = document.createElement('tr');
+        const systemCell = document.createElement('td');
+        systemCell.textContent = system;
+        const sizeCell = document.createElement('td');
+        sizeCell.textContent = sizes[system];
+        row.appendChild(systemCell);
+        row.appendChild(sizeCell);
+        tbody.appendChild(row);
+    }
+
+    table.appendChild(tbody);
+    resultDiv.appendChild(table);
+}
 
 function getShoeSize(length, system) {
-    // Таблицы размеров обуви (примерные значения)
     const sizeTables = {
         EU: [
-            { min: 22, max: 22.5, size: 35 },
-            { min: 22.6, max: 23.3, size: 35.5 },
-            { min: 23.4, max: 24, size: 36 },
-            { min: 24.1, max: 24.7, size: 37 },
-            { min: 24.8, max: 25.4, size: 38 },
-            { min: 25.5, max: 26.1, size: 39 },
-            { min: 26.2, max: 26.8, size: 40 },
-            { min: 26.9, max: 27.5, size: 41 },
-            { min: 27.6, max: 28.2, size: 42 },
-            { min: 28.3, max: 28.9, size: 43 },
-            { min: 29, max: 29.6, size: 44 },
-            { min: 29.7, max: 30.3, size: 45 },
-            { min: 30.4, max: Infinity, size: "46+" }
+            { min: 22.1, max: 22.5, size: 35 },
+            { min: 22.6, max: 23, size: 36 },
+            { min: 23.1, max: 23.5, size: 37 },
+            { min: 23.6, max: 24, size: 38 },
+            { min: 24.1, max: 24.5, size: 39 },
+            { min: 24.6, max: 25, size: 40 },
+            { min: 25.1, max: 25.5, size: 41 },
+            { min: 25.6, max: 26, size: 42 },
+            { min: 26.1, max: 26.5, size: 43 },
+            { min: 26.6, max: 27, size: 44 },
+            { min: 27.1, max: 27.5, size: 45 },
+            { min: 27.6, max: 28, size: 46 },
+            { min: 28.1, max: 28.5, size: 47 },
+            { min: 28.6, max: 29, size: 48 },
+            { min: 29.1, max: 29.5, size: 49 },
+            { min: 29.6, max: 30, size: 50 }
         ],
         "US Men": [
-            { min: 22, max: 22.5, size: 4 },
-            { min: 22.6, max: 23.3, size: 4.5 },
-            { min: 23.4, max: 24, size: 5 },
-            { min: 24.1, max: 24.7, size: 6 },
-            { min: 24.8, max: 25.4, size: 7 },
-            { min: 25.5, max: 26.1, size: 8 },
-            { min: 26.2, max: 26.8, size: 9 },
-            { min: 26.9, max: 27.5, size: 10 },
-            { min: 27.6, max: 28.2, size: 11 },
-            { min: 28.3, max: 28.9, size: 12 },
-            { min: 29, max: 29.6, size: 13 },
-            { min: 29.7, max: 30.3, size: "14+" }
+            { min: 22.1, max: 22.5, size: 4 },
+            { min: 22.6, max: 23, size: 5 },
+            { min: 23.1, max: 23.5, size: 6 },
+            { min: 23.6, max: 24, size: 7 },
+            { min: 24.1, max: 24.5, size: 8 },
+            { min: 24.6, max: 25, size: 9 },
+            { min: 25.1, max: 25.5, size: 10 },
+            { min: 25.6, max: 26, size: 11 },
+            { min: 26.1, max: 26.5, size: 12 },
+            { min: 26.6, max: 27, size: 13 },
+            { min: 27.1, max: 27.5, size: 14 }
         ],
         "US Women": [
-            { min: 22, max: 22.5, size: 5 },
-            { min: 22.6, max: 23.3, size: 5.5 },
-            { min: 23.4, max: 24, size: 6 },
-            { min: 24.1, max: 24.7, size: 7 },
-            { min: 24.8, max: 25.4, size: 8 },
-            { min: 25.5, max: 26.1, size: 9 },
-            { min: 26.2, max: 26.8, size: 10 },
-            { min: 26.9, max: 27.5, size: 11 },
-            { min: 27.6, max: 28.2, size: 12 },
-            { min: 28.3, max: 28.9, size: 13 },
-            { min: 29, max: 29.6, size: "14+" }
+            { min: 21.6, max: 22, size: 5 },
+            { min: 22.1, max: 22.5, size: 6 },
+            { min: 22.6, max: 23, size: 7 },
+            { min: 23.1, max: 23.5, size: 8 },
+            { min: 23.6, max: 24, size: 9 },
+            { min: 24.1, max: 24.5, size: 10 },
+            { min: 24.6, max: 25, size: 11 },
+            { min: 25.1, max: 25.5, size: 12 }
         ],
         UK: [
-            { min: 22, max: 22.5, size: 2 },
-            { min: 22.6, max: 23.3, size: 2.5 },
-            { min: 23.4, max: 24, size: 3 },
-            { min: 24.1, max: 24.7, size: 4 },
-            { min: 24.8, max: 25.4, size: 5 },
-            { min: 25.5, max: 26.1, size: 6 },
-            { min: 26.2, max: 26.8, size: 7 },
-            { min: 26.9, max: 27.5, size: 8 },
-            { min: 27.6, max: 28.2, size: 9 },
-            { min: 28.3, max: 28.9, size: 10 },
-            { min: 29, max: 29.6, size: 11 },
-            { min: 29.7, max: 30.3, size: "12+" }
+            { min: 22.1, max: 22.5, size: 3 },
+            { min: 22.6, max: 23, size: 4 },
+            { min: 23.1, max: 23.5, size: 5 },
+            { min: 23.6, max: 24, size: 6 },
+            { min: 24.1, max: 24.5, size: 7 },
+            { min: 24.6, max: 25, size: 8 },
+            { min: 25.1, max: 25.5, size: 9 },
+            { min: 25.6, max: 26, size: 10 },
+            { min: 26.1, max: 26.5, size: 11 },
+            { min: 26.6, max: 27, size: 12 }
         ],
         JP: [
-            { min: 22, max: 22.5, size: 22 },
-            { min: 22.6, max: 23.3, size: 22.5 },
-            { min: 23.4, max: 24, size: 23 },
-            { min: 24.1, max: 24.7, size: 24 },
-            { min: 24.8, max: 25.4, size: 25 },
-            { min: 25.5, max: 26.1, size: 26 },
-            { min: 26.2, max: 26.8, size: 27 },
-            { min: 26.9, max: 27.5, size: 28 },
-            { min: 27.6, max: 28.2, size: 29 },
-            { min: 28.3, max: 28.9, size: 30 },
-            { min: 29, max: 29.6, size: 31 },
-            { min: 29.7, max: 30.3, size: "32+" }
+            { min: 22.1, max: 22.5, size: 22.5 },
+            { min: 22.6, max: 23, size: 23 },
+            { min: 23.1, max: 23.5, size: 23.5 },
+            { min: 23.6, max: 24, size: 24 },
+            { min: 24.1, max: 24.5, size: 24.5 },
+            { min: 24.6, max: 25, size: 25 },
+            { min: 25.1, max: 25.5, size: 25.5 },
+            { min: 25.6, max: 26, size: 26 },
+            { min: 26.1, max: 26.5, size: 26.5 },
+            { min: 26.6, max: 27, size: 27 }
         ],
-        TR: [
-            // Таблица размеров для Турции (примерные значения, уточните при необходимости)
-            { min: 22, max: 22.5, size: 35 },
-            { min: 22.6, max: 23.3, size: 35.5 },
-            { min: 23.4, max: 24, size: 36 },
-            { min: 24.1, max: 24.7, size: 37 },
-            { min: 24.8, max: 25.4, size: 38 },
-            { min: 25.5, max: 26.1, size: 39 },
-            { min: 26.2, max: 26.8, size: 40 },
-            { min: 26.9, max: 27.5, size: 41 },
-            { min: 27.6, max: 28.2, size: 42 },
-            { min: 28.3, max: 28.9, size: 43 },
-            { min: 29, max: 29.6, size: 44 },
-            { min: 29.7, max: 30.3, size: "45+" }
+        AU: [
+            { min: 22.1, max: 22.5, size: 4 },
+            { min: 22.6, max: 23, size: 5 },
+            { min: 23.1, max: 23.5, size: 6 },
+            { min: 23.6, max: 24, size: 7 },
+            { min: 24.1, max: 24.5, size: 8 },
+            { min: 24.6, max: 25, size: 9 },
+            { min: 25.1, max: 25.5, size: 10 },
+            { min: 25.6, max: 26, size: 11 },
+            { min: 26.1, max: 26.5, size: 12 },
+            { min: 26.6, max: 27, size: 13 }
+        ],
+        CN: [
+            { min: 22.1, max: 22.5, size: 36 },
+            { min: 22.6, max: 23, size: 37 },
+            { min: 23.1, max: 23.5, size: 38 },
+            { min: 23.6, max: 24, size: 39 },
+            { min: 24.1, max: 24.5, size: 40 },
+            { min: 24.6, max: 25, size: 41 },
+            { min: 25.1, max: 25.5, size: 42 },
+            { min: 25.6, max: 26, size: 43 },
+            { min: 26.1, max: 26.5, size: 44 },
+            { min: 26.6, max: 27, size: 45 }
+        ],
+        KR: [
+            { min: 22.1, max: 22.5, size: 225 },
+            { min: 22.6, max: 23, size: 230 },
+            { min: 23.1, max: 23.5, size: 235 },
+            { min: 23.6, max: 24, size: 240 },
+            { min: 24.1, max: 24.5, size: 245 },
+            { min: 24.6, max: 25, size: 250 },
+            { min: 25.1, max: 25.5, size: 255 },
+            { min: 25.6, max: 26, size: 260 },
+            { min: 26.1, max: 26.5, size: 265 },
+            { min: 26.6, max: 27, size: 270 }
+        ],
+        RU: [
+            { min: 22.1, max: 22.5, size: 35 },
+            { min: 22.6, max: 23, size: 36 },
+            { min: 23.1, max: 23.5, size: 37 },
+            { min: 23.6, max: 24, size: 38 },
+            { min: 24.1, max: 24.5, size: 39 },
+            { min: 24.6, max: 25, size: 40 },
+            { min: 25.1, max: 25.5, size: 41 },
+            { min: 25.6, max: 26, size: 42 },
+            { min: 26.1, max: 26.5, size: 43 },
+            { min: 26.6, max: 27, size: 44 }
+        ],
+        BR: [
+            { min: 22.1, max: 22.5, size: 33 },
+            { min: 22.6, max: 23, size: 34 },
+            { min: 23.1, max: 23.5, size: 35 },
+            { min: 23.6, max: 24, size: 36 },
+            { min: 24.1, max: 24.5, size: 37 },
+            { min: 24.6, max: 25, size: 38 },
+            { min: 25.1, max: 25.5, size: 39 },
+            { min: 25.6, max: 26, size: 40 },
+            { min: 26.1, max: 26.5, size: 41 },
+            { min: 26.6, max: 27, size: 42 }
+        ],
+        MX: [
+            { min: 22.1, max: 22.5, size: 3 },
+            { min: 22.6, max: 23, size: 4 },
+            { min: 23.1, max: 23.5, size: 5 },
+            { min: 23.6, max: 24, size: 6 },
+            { min: 24.1, max: 24.5, size: 7 },
+            { min: 24.6, max: 25, size: 8 },
+            { min: 25.1, max: 25.5, size: 9 },
+            { min: 25.6, max: 26, size: 10 },
+            { min: 26.1, max: 26.5, size: 11 },
+            { min: 26.6, max: 27, size: 12 }
         ]
     };
 
@@ -152,32 +244,28 @@ function getShoeSize(length, system) {
 
     for (let entry of table) {
         if (length >= entry.min && length <= entry.max) {
-            if (typeof entry.size === 'function') {
-                return entry.size(length);
-            }
-            return `Your shoe size is ${entry.size} (${system})`;
+            return entry.size.toString();
         }
     }
 
-    return 'Shoe size not found for the given foot length.';
+    return 'N/A';
 }
 
-function showNotification(message) {
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.textContent = message;
-    document.body.appendChild(notification);
+function toggleImage(savePreference) {
+    const image = document.querySelector('.header-image');
+    image.classList.toggle('hidden');
 
-    // Анимация появления
-    setTimeout(() => {
-        notification.classList.add('show');
-    }, 10);
+    if (savePreference) {
+        chrome.storage.local.set({ showImage: !image.classList.contains('hidden') });
+    }
+}
 
-    // Скрытие через 3 секунды
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    }, 3000);
+function toggleTheme(savePreference) {
+    const body = document.body;
+    body.classList.toggle('dark-theme');
+
+    if (savePreference) {
+        const theme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+        chrome.storage.local.set({ theme: theme });
+    }
 }

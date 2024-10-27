@@ -2,14 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Foot Sizer</title>
     <link rel="stylesheet" href="popup.css">
 </head>
 <body>
     <div class="container">
-        <h1>Foot Sizer</h1>
-        <p>Enter your foot length to find the correct shoe size:</p>
+        <div class="header-controls">
+            <button id="toggleImage" title="Show/Hide Image">❓</button>
+            <button id="toggleTheme" title="Switch Theme">🌗</button>
+        </div>
+        <img src="icons/foot-size.png" alt="Foot Size" class="header-image hidden">
+        <p>Enter your foot length to find your shoe size across different size systems:</p>
         <div class="input-group foot-input">
             <label for="footLength">Foot Length:</label>
             <input type="number" id="footLength" min="0" step="0.1" placeholder="e.g., 25.5">
@@ -17,27 +20,6 @@
                 <option value="cm">cm</option>
                 <option value="in">in</option>
             </select>
-        </div>
-        <div class="input-group">
-            <label for="sizeSystem">Size System:</label>
-            <select id="sizeSystem">
-                <option value="EU">EU</option>
-                <option value="US Men">US Men</option>
-                <option value="US Women">US Women</option>
-                <option value="UK">UK</option>
-                <option value="JP">JP</option>
-                <option value="TR">Turkish</option>
-            </select>
-        </div>
-        <button id="findSize">Find Size</button>
-        <button id="showInstructions">How to Measure Your Foot</button>
-        <div id="instructions" style="display:none;">
-            <h2>How to Measure Your Foot</h2>
-            <p>1. Place a piece of paper on the floor against a wall.</p>
-            <p>2. Stand on the paper with your heel against the wall.</p>
-            <p>3. Mark the longest part of your foot.</p>
-            <p>4. Measure the distance from the wall to the mark in centimeters or inches.</p>
-            <button id="closeInstructions">Close</button>
         </div>
         <div id="result"></div>
     </div>

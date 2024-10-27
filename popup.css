@@ -3,26 +3,75 @@ body {
     margin: 0;
     padding: 20px;
     width: 300px;
-    background-color: #f0f2f5;
+    background-color: var(--background-color);
+    color: var(--text-color);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     border-radius: 8px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+:root {
+    --background-color: #f0f2f5;
+    --text-color: #333;
+    --input-background: #fff;
+    --input-border: #ccc;
+    --table-header-background: #f2f2f2;
+    --table-row-hover: #ddd;
+}
+
+body.dark-theme {
+    --background-color: #2e2e2e;
+    --text-color: #ffffff;
+    --input-background: #3e3e3e;
+    --input-border: #555;
+    --table-header-background: #3e3e3e;
+    --table-row-hover: #555;
 }
 
 .container {
     text-align: center;
 }
 
-h1 {
-    font-size: 24px;
+.header-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.header-controls button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text-color);
+    margin-left: 10px;
+    transition: color 0.3s;
+}
+
+.header-controls button:hover {
+    color: #007BFF;
+}
+
+.header-image {
+    max-width: 100%;
+    height: auto;
     margin-bottom: 20px;
-    color: #333;
-    animation: fadeInDown 0.5s ease;
+    opacity: 1;
+    max-height: 500px;
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+}
+
+.hidden {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
 }
 
 p {
     font-size: 14px;
-    color: #555;
+    color: var(--text-color);
     margin-bottom: 20px;
+    transition: color 0.3s;
 }
 
 .input-group {
@@ -30,39 +79,62 @@ p {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    animation: fadeInUp 0.5s ease;
+    transition: all 0.3s ease;
 }
 
 .input-group.foot-input {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    position: relative;
 }
 
 .input-group.foot-input label {
     margin-right: 10px;
     min-width: 80px;
-    color: #333;
+    color: var(--text-color);
 }
 
 .input-group.foot-input input {
-    flex: 1;
+    flex: 2;
     margin-right: 10px;
+    background-color: var(--input-background);
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 16px;
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.input-group.foot-input select {
+    flex: 1;
+    background-color: var(--input-background);
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
 }
 
 label {
     margin-bottom: 5px;
     font-weight: bold;
-    color: #333;
+    color: var(--text-color);
+    transition: color 0.3s;
 }
 
 input, select {
     width: 100%;
     padding: 8px 12px;
     box-sizing: border-box;
-    border: 1px solid #ccc;
+    border: 1px solid var(--input-border);
     border-radius: 4px;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s, color 0.3s;
+    background-color: var(--input-background);
+    color: var(--text-color);
 }
 
 input:focus, select:focus {
@@ -70,83 +142,31 @@ input:focus, select:focus {
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
-button {
+.size-table {
     width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    font-size: 16px;
-}
-
-button:hover {
-    background-color: #0056b3;
-    transform: translateY(-2px);
-}
-
-button:active {
-    transform: translateY(0);
-}
-
-#result {
+    border-collapse: collapse;
     margin-top: 20px;
-    font-size: 16px;
-    color: #28a745;
-    min-height: 24px;
-    animation: fadeIn 0.5s ease;
+    transition: all 0.3s ease;
 }
 
-#instructions {
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    padding: 15px;
-    margin-top: 20px;
+.size-table th, .size-table td {
+    border: 1px solid var(--input-border);
+    padding: 8px;
     text-align: left;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    animation: slideDown 0.5s ease;
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
 }
 
-#instructions h2 {
-    margin-top: 0;
-    font-size: 18px;
-    color: #333;
+.size-table th {
+    background-color: var(--table-header-background);
 }
 
-#instructions p {
-    margin: 10px 0;
-    color: #555;
+.size-table tr:nth-child(even) {
+    background-color: var(--input-background);
 }
 
-#instructions button {
-    background-color: #dc3545;
-}
-
-#instructions button:hover {
-    background-color: #c82333;
-}
-
-.notification {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: #333;
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 4px;
-    opacity: 0;
-    transition: opacity 0.5s ease, transform 0.5s ease;
-    transform: translateY(20px);
-    z-index: 1000;
-}
-
-.notification.show {
-    opacity: 1;
-    transform: translateY(0);
+.size-table tr:hover {
+    background-color: var(--table-row-hover);
 }
 
 @keyframes fadeInDown {
@@ -174,9 +194,4 @@ button:active {
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
-}
-
-@keyframes slideDown {
-    from { max-height: 0; opacity: 0; }
-    to { max-height: 500px; opacity: 1; }
 }
